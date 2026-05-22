@@ -1,7 +1,7 @@
 use crossterm::{
     cursor::MoveTo,
     execute,
-    style::{Print, SetForegroundColor},
+    style::{Color, Print, SetForegroundColor},
     terminal::{self, Clear},
 };
 use std::io::Stdout;
@@ -37,7 +37,13 @@ pub fn draw_point(p: Point2d, stdout: &mut Stdout) {
     );
 }
 
-pub fn draw_line(a: Point2d, b: Point2d, stdout: &mut Stdout) {
+pub fn draw_line(
+    a: Point2d,
+    b: Point2d,
+    stdout: &mut Stdout,
+    chara: &char,
+    color: crossterm::style::Color,
+) {
     if !a.x.is_finite() || !a.y.is_finite() || !b.x.is_finite() || !b.y.is_finite() {
         return;
     }
@@ -59,8 +65,8 @@ pub fn draw_line(a: Point2d, b: Point2d, stdout: &mut Stdout) {
             let _ = execute!(
                 stdout,
                 MoveTo(x0 as u16, y0 as u16),
-                Print("."),
-                SetForegroundColor(crossterm::style::Color::DarkBlue)
+                Print(chara),
+                SetForegroundColor(color)
             );
         }
         if x0 == x1 && y0 == y1 {
@@ -78,7 +84,26 @@ pub fn draw_line(a: Point2d, b: Point2d, stdout: &mut Stdout) {
     }
 }
 
-pub fn frame(stdout: &mut Stdout, fig: &Figure, dz: f64, angle: f64, scale_factor: f64) {
+pub struct Configs {
+    pub fig: &'static Figure,
+    pub dz: f64,
+    pub angle: f64,
+    pub scale_factor: f64,
+    pub chara: char,
+    pub color: Color,
+}
+
+pub fn frame(
+    stdout: &mut Stdout,
+    Configs {
+        fig,
+        dz,
+        angle,
+        scale_factor,
+        chara,
+        color,
+    }: &Configs,
+) {
     let _ = execute!(stdout, Clear(terminal::ClearType::All));
 
     let near = 0.01;
@@ -87,11 +112,11 @@ pub fn frame(stdout: &mut Stdout, fig: &Figure, dz: f64, angle: f64, scale_facto
             let a = &fig.points[f[i]];
             let b = &fig.points[f[(i + 1) % f.len()]];
 
-            let ca = mutate_z(&rotate_xyz(&scale(a, scale_factor), angle), dz);
-            let cb = mutate_z(&rotate_xyz(&scale(b, scale_factor), angle), dz);
+            let ca = mutate_z(&rotate_xyz(&scale(a, *scale_factor), *angle), *dz);
+            let cb = mutate_z(&rotate_xyz(&scale(b, *scale_factor), *angle), *dz);
 
             if let Some((ca, cb)) = clip_near(&ca, &cb, near) {
-                draw_line(project(&ca), project(&cb), stdout);
+                draw_line(project(&ca), project(&cb), stdout, &chara, *color);
             }
         }
     }
