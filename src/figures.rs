@@ -5,6 +5,7 @@ pub struct Figure {
     pub faces: &'static [&'static [usize]],
 }
 
+// ! Please save the changes without triggering the FORMATER
 static CUBE: Figure = Figure {
     points: &[
         Point3d { x: 0.25, y: 0.25, z: -0.25 },

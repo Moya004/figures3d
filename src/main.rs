@@ -30,18 +30,11 @@ fn main() {
     let _ = execute!(stdout, Clear(terminal::ClearType::All), Hide);
     let args: Vec<String> = env::args().collect();
 
-    if args.len() <= 1 {
-        panic!("Please provide the figure (cube, pyramid, tetrahedron, dodecahedron, icosahedron)");
-    }
+    let fig = args
+        .get(1)
+        .and_then(|f| get_figure(f))
+        .unwrap_or_else(|| get_figure("cube").unwrap());
 
-    let figure_name = &args[1];
-    let fig = match get_figure(figure_name) {
-        Some(f) => f,
-        None => panic!(
-            "unknown figure '{}'. available: cube, pyramid, tetrahedron, dodecahedron, icosahedron",
-            figure_name
-        ),
-    };
     let figure_scale = args
         .get(2)
         .and_then(|s| s.parse::<f64>().ok())
