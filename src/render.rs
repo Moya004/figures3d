@@ -6,8 +6,14 @@ use crossterm::{
 };
 use std::io::Stdout;
 
-use crate::figures::Figure;
-use crate::geometry::{Point2d, clip_near, mutate_z, project, rotate_xyz, scale};
+use crate::{
+    figures::{Figure, get_figure},
+    geometry::{
+        Plane, Point2d, clip_near, mutate_z, project, rotate_xy, rotate_xyz, rotate_xz, rotate_yz,
+        scale,
+    },
+    style::parse_color,
+};
 
 pub fn width() -> u16 {
     terminal::size().unwrap().0
@@ -91,6 +97,58 @@ pub struct Configs {
     pub scale_factor: f64,
     pub chara: char,
     pub color: Color,
+    pub plane: Plane,
+}
+
+impl Configs {
+    pub fn new(args: Vec<String>) -> Self {
+        let fig = args
+            .get(1)
+            .and_then(|f| get_figure(f))
+            .unwrap_or_else(|| get_figure("cube").unwrap());
+
+        let figure_scale = args
+            .get(2)
+            .and_then(|s| s.parse::<f64>().ok())
+            .unwrap_or(2.0);
+
+        let chara = args
+            .get(3)
+            .and_then(|c| c.parse::<char>().ok())
+            .unwrap_or('.');
+
+        let color = args
+            .get(4)
+            .and_then(|cl| parse_color(cl))
+            .unwrap_or(crossterm::style::Color::White);
+
+        let rotate_axis = args
+            .get(5)
+            .and_then(|plane| plane.parse::<char>().ok())
+            .unwrap_or('#');
+
+        let distance_from_screen = args
+            .get(6)
+            .and_then(|d| d.parse::<f64>().ok())
+            .unwrap_or(1.5);
+
+        let plane = match rotate_axis {
+            'x' => Plane::YZ,
+            'y' => Plane::XZ,
+            'z' => Plane::XY,
+            _ => Plane::XYZ,
+        };
+
+        Self {
+            fig,
+            dz: distance_from_screen,
+            angle: 0.0,
+            scale_factor: figure_scale,
+            chara,
+            color,
+            plane,
+        }
+    }
 }
 
 pub fn frame(
@@ -102,6 +160,7 @@ pub fn frame(
         scale_factor,
         chara,
         color,
+        plane,
     }: &Configs,
 ) {
     let _ = execute!(stdout, Clear(terminal::ClearType::All));
@@ -112,8 +171,18 @@ pub fn frame(
             let a = &fig.points[f[i]];
             let b = &fig.points[f[(i + 1) % f.len()]];
 
-            let ca = mutate_z(&rotate_xyz(&scale(a, *scale_factor), *angle), *dz);
-            let cb = mutate_z(&rotate_xyz(&scale(b, *scale_factor), *angle), *dz);
+            let scaled_a = scale(a, *scale_factor);
+            let scaled_b = scale(b, *scale_factor);
+
+            let (rotated_a, rotated_b) = match *plane {
+                Plane::XY => (rotate_xy(&scaled_a, *angle), rotate_xy(&scaled_b, *angle)),
+                Plane::XZ => (rotate_xz(&scaled_a, *angle), rotate_xz(&scaled_b, *angle)),
+                Plane::YZ => (rotate_yz(&scaled_a, *angle), rotate_yz(&scaled_b, *angle)),
+                Plane::XYZ => (rotate_xyz(&scaled_a, *angle), rotate_xyz(&scaled_b, *angle)),
+            };
+
+            let ca = mutate_z(&rotated_a, *dz);
+            let cb = mutate_z(&rotated_b, *dz);
 
             if let Some((ca, cb)) = clip_near(&ca, &cb, near) {
                 draw_line(project(&ca), project(&cb), stdout, &chara, *color);

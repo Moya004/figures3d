@@ -20,8 +20,8 @@ use std::{
     time::Duration,
 };
 
-use crate::{figures::get_figure, render::Configs};
-use crate::{render::frame, style::parse_color};
+use crate::render::Configs;
+use crate::render::frame;
 
 static FPS: u64 = 100;
 
@@ -30,34 +30,8 @@ fn main() {
     let _ = execute!(stdout, Clear(terminal::ClearType::All), Hide);
     let args: Vec<String> = env::args().collect();
 
-    let fig = args
-        .get(1)
-        .and_then(|f| get_figure(f))
-        .unwrap_or_else(|| get_figure("cube").unwrap());
+    let mut config = Configs::new(args);
 
-    let figure_scale = args
-        .get(2)
-        .and_then(|s| s.parse::<f64>().ok())
-        .unwrap_or(2.0);
-
-    let chara = args
-        .get(3)
-        .and_then(|c| c.parse::<char>().ok())
-        .unwrap_or('.');
-
-    let color = args
-        .get(4)
-        .and_then(|cl| parse_color(cl))
-        .unwrap_or(crossterm::style::Color::White);
-
-    let mut config = Configs {
-        fig: fig,
-        dz: 0.0,
-        angle: 0.0,
-        scale_factor: figure_scale,
-        chara: chara,
-        color: color,
-    };
     enable_raw_mode().unwrap();
 
     let running = Arc::new(AtomicBool::new(true));
@@ -66,7 +40,6 @@ fn main() {
     let render_handle = thread::spawn(move || {
         let mut stdout = std::io::stdout();
         let dt = 1.0 / FPS as f64;
-        config.dz = 1.5;
         while render_running.load(Ordering::Relaxed) {
             config.angle += 2.0 * std::f64::consts::PI * dt;
             frame(&mut stdout, &config);
