@@ -1,3 +1,10 @@
+pub enum Plane {
+    XY,
+    YZ,
+    XZ,
+    XYZ,
+}
+
 pub struct Point2d {
     pub x: f64,
     pub y: f64,
@@ -24,8 +31,16 @@ pub fn clip_near(a: &Point3d, b: &Point3d, near: f64) -> Option<(Point3d, Point3
     }
     if a_in && b_in {
         return Some((
-            Point3d { x: a.x, y: a.y, z: a.z },
-            Point3d { x: b.x, y: b.y, z: b.z },
+            Point3d {
+                x: a.x,
+                y: a.y,
+                z: a.z,
+            },
+            Point3d {
+                x: b.x,
+                y: b.y,
+                z: b.z,
+            },
         ));
     }
     let t = (near - a.z) / (b.z - a.z);
@@ -35,9 +50,23 @@ pub fn clip_near(a: &Point3d, b: &Point3d, near: f64) -> Option<(Point3d, Point3
         z: near,
     };
     if a_in {
-        Some((Point3d { x: a.x, y: a.y, z: a.z }, intersect))
+        Some((
+            Point3d {
+                x: a.x,
+                y: a.y,
+                z: a.z,
+            },
+            intersect,
+        ))
     } else {
-        Some((intersect, Point3d { x: b.x, y: b.y, z: b.z }))
+        Some((
+            intersect,
+            Point3d {
+                x: b.x,
+                y: b.y,
+                z: b.z,
+            },
+        ))
     }
 }
 
