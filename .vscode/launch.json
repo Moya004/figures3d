@@ -13,8 +13,6 @@
                 "args": [
                     "run",
                     "--bin=figures3d",
-                    "--",
-                    "cube", "2","*", "red"
                 ]
             },
             "args": []
