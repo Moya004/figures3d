@@ -9,8 +9,8 @@ use std::io::Stdout;
 use crate::{
     figures::{Figure, get_figure},
     geometry::{
-        Plane, Point2d, clip_near, mutate_z, project, rotate_xy, rotate_xyz, rotate_xz, rotate_yz,
-        scale,
+        Point2d, RotationAxis, clip_near, mutate_z, project, rotate_x, rotate_xy, rotate_xyz,
+        rotate_y, rotate_yz, rotate_z, rotate_zx, scale,
     },
     style::parse_color,
 };
@@ -30,7 +30,7 @@ pub fn point_to_screen(p: Point2d) -> Point2d {
     }
 }
 
-pub fn draw_point(p: Point2d, stdout: &mut Stdout) {
+pub fn _draw_point(p: Point2d, stdout: &mut Stdout) {
     if !p.x.is_finite() || !p.y.is_finite() {
         return;
     }
@@ -97,7 +97,7 @@ pub struct Configs {
     pub scale_factor: f64,
     pub chara: char,
     pub color: Color,
-    pub plane: Plane,
+    pub plane: RotationAxis,
 }
 
 impl Configs {
@@ -124,8 +124,8 @@ impl Configs {
 
         let rotate_axis = args
             .get(5)
-            .and_then(|plane| plane.parse::<char>().ok())
-            .unwrap_or('#');
+            .and_then(|plane| Some(*&plane.as_str()))
+            .unwrap_or("xyz");
 
         let distance_from_screen = args
             .get(6)
@@ -133,10 +133,13 @@ impl Configs {
             .unwrap_or(1.5);
 
         let plane = match rotate_axis {
-            'x' => Plane::YZ,
-            'y' => Plane::XZ,
-            'z' => Plane::XY,
-            _ => Plane::XYZ,
+            "x" => RotationAxis::X,
+            "y" => RotationAxis::Y,
+            "z" => RotationAxis::Z,
+            "xy" | "yx" => RotationAxis::XY,
+            "yz" | "zy" => RotationAxis::YZ,
+            "xz" | "zx" => RotationAxis::XZ,
+            _ => RotationAxis::XYZ,
         };
 
         Self {
@@ -175,10 +178,22 @@ pub fn frame(
             let scaled_b = scale(b, *scale_factor);
 
             let (rotated_a, rotated_b) = match *plane {
-                Plane::XY => (rotate_xy(&scaled_a, *angle), rotate_xy(&scaled_b, *angle)),
-                Plane::XZ => (rotate_xz(&scaled_a, *angle), rotate_xz(&scaled_b, *angle)),
-                Plane::YZ => (rotate_yz(&scaled_a, *angle), rotate_yz(&scaled_b, *angle)),
-                Plane::XYZ => (rotate_xyz(&scaled_a, *angle), rotate_xyz(&scaled_b, *angle)),
+                RotationAxis::Z => (rotate_z(&scaled_a, *angle), rotate_z(&scaled_b, *angle)),
+                RotationAxis::Y => (rotate_y(&scaled_a, *angle), rotate_y(&scaled_b, *angle)),
+                RotationAxis::X => (rotate_x(&scaled_a, *angle), rotate_x(&scaled_b, *angle)),
+                RotationAxis::XY => (
+                    rotate_xy(&scaled_a, *angle, *angle + std::f64::consts::FRAC_PI_4),
+                    rotate_xy(&scaled_b, *angle, *angle + std::f64::consts::FRAC_PI_4),
+                ),
+                RotationAxis::YZ => (
+                    rotate_yz(&scaled_a, *angle, *angle + std::f64::consts::FRAC_PI_4),
+                    rotate_yz(&scaled_b, *angle, *angle + std::f64::consts::FRAC_PI_4),
+                ),
+                RotationAxis::XZ => (
+                    rotate_zx(&scaled_a, *angle, *angle + std::f64::consts::FRAC_PI_4),
+                    rotate_zx(&scaled_b, *angle, *angle + std::f64::consts::FRAC_PI_4),
+                ),
+                RotationAxis::XYZ => (rotate_xyz(&scaled_a, *angle), rotate_xyz(&scaled_b, *angle)),
             };
 
             let ca = mutate_z(&rotated_a, *dz);
