@@ -132,12 +132,36 @@ static TETRAHEDRON: Figure = Figure {
     faces: &[&[0, 1, 2], &[0, 2, 3], &[0, 3, 1], &[1, 3, 2]],
 };
 
+static OCTAHEDRON: Figure = Figure {
+    points: &[
+        Point3d { x:  0.24270509831248423, y:  0.0,                 z:  0.0                 },
+        Point3d { x: -0.24270509831248423, y:  0.0,                 z:  0.0                 },
+        Point3d { x:  0.0,                 y:  0.24270509831248423, z:  0.0                 },
+        Point3d { x:  0.0,                 y: -0.24270509831248423, z:  0.0                 },
+        Point3d { x:  0.0,                 y:  0.0,                 z:  0.24270509831248423 },
+        Point3d { x:  0.0,                 y:  0.0,                 z: -0.24270509831248423 },
+    ],
+    faces: &[
+        // Hemisferio +Y (polo 2)
+        &[2, 0, 4],
+        &[2, 4, 1],
+        &[2, 1, 5],
+        &[2, 5, 0],
+        // Hemisferio -Y (polo 3)
+        &[3, 4, 0],
+        &[3, 1, 4],
+        &[3, 5, 1],
+        &[3, 0, 5],
+    ],
+};
+
 static FIGURES: &[(&str, &Figure)] = &[
     ("cube", &CUBE),
     ("pyramid", &PYRAMID),
     ("tetrahedron", &TETRAHEDRON),
     ("dodecahedron", &DODECAHEDRON),
     ("icosahedron", &ICOSAHEDRON),
+    ("octahedron", &OCTAHEDRON)
 ];
 
 pub fn get_figure(name: &str) -> Option<&'static Figure> {
