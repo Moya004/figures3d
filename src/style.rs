@@ -1,6 +1,6 @@
 use crossterm::style::Color;
 
-pub static COLOR_MAP: [(&str, Color); 19] = [
+pub static COLOR_MAP: [(&str, Color); 20] = [
 	("black", Color::Black),
 	("red", Color::Red),
 	("darkred", Color::DarkRed),
@@ -20,6 +20,7 @@ pub static COLOR_MAP: [(&str, Color); 19] = [
 	("darkgrey", Color::DarkGrey),
 	("darkgray", Color::DarkGrey),
 	("reset", Color::Reset),
+	("pink",Color::Rgb { r: 234, g: 39, b: 235 }),
 ];
 
 pub fn parse_color(input: &str) -> Option<Color> {
