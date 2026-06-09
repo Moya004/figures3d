@@ -23,7 +23,7 @@ use std::{
 use crate::render::Configs;
 use crate::render::frame;
 
-static FPS: u64 = 100;
+static FPS: u64 = 90;
 
 fn main() {
     let mut stdout = stdout();
@@ -41,7 +41,7 @@ fn main() {
         let mut stdout = std::io::stdout();
         let dt = 1.0 / FPS as f64;
         while render_running.load(Ordering::Relaxed) {
-            config.angle += 2.0 * std::f64::consts::PI * dt;
+            config.angle += std::f64::consts::PI * dt;
             frame(&mut stdout, &config);
             thread::sleep(Duration::from_millis(1000 / FPS));
         }
